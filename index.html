@@ -1,0 +1,973 @@
+<!DOCTYPE HTML>
+<html>
+<head prefix="og: https://ogp.me/ns#">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MG0V86Q8PG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MG0V86Q8PG');
+</script>
+<title>ORBIT SIMULATOR</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:url" content="https://storage.googleapis.com/orbitsim/index.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="ORBIT SIMULATOR" />
+<meta property="og:description" content="Simulate the Earth–Moon–Satellite system with real-time orbits and physics. Customize mass, velocity, and more — all in your browser." />
+<meta property="og:site_name" content="ORBIT SIMULATOR" />
+<meta property="og:image" content="assets/ogp.png" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css/normalize.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@200..800&display=swap" />
+<style>
+html {
+  touch-action: manipulation;
+  background: black;
+  color: #2ECC71;
+  font-family: Oxanium, sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.6;
+}
+
+* {
+  transition-duration: .25s;
+  border-color: #2ECC71;
+}
+*[hidden] {
+  visibility: none;
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+a:link, a:visited {
+  color: #3498DB;
+  text-decoration: none;
+}
+a:hover, a:active {
+  color: #3498DB;
+  text-decoration: underline;
+}
+
+button {
+  padding: .25rem;
+  border: solid 1px;
+  color: #2ECC71;
+  background: transparent;
+  cursor: pointer;
+}
+button:hover {
+  box-shadow: 0 0 2rem rgba(46,204,113,.4) inset;
+}
+button:active {
+  box-shadow: 0 0 2rem rgba(46,204,113,.8) inset;
+  transition: all .1s;
+}
+
+input {
+  background: black;
+  color: #2ECC71;
+  border-style: none none solid;
+  border-width: 1px;
+  border-color: #2ECC71;
+  border-radius: 0;
+}
+
+.material-icons {
+  font-size: 24px;
+  @media screen and (min-width: 480px) {
+    font-size: 32px;
+  }
+}
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+}
+
+.background-image {
+  background-color: black;
+  background-image: url('assets/background.png'); /* image from https://aipict.com/utility_graphics/universe/ */
+  background-position: center;
+  background-size: cover;
+}
+.background-color {
+  background: radial-gradient(rgba(16,8,16,.5),rgba(0,0,0,1));
+}
+
+.modal {
+  transition-behavior: allow-discrete;
+  @starting-style {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+.modal .background {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+}
+.modal .content {
+  position: fixed;
+  width: calc(100vw - 6rem);
+  max-width: 480px;
+  max-height: calc(100svh - 6rem);
+  inset: 2rem auto auto;
+  left: 50vw;
+  transform: translateX(-50%);
+  padding: 1rem;
+  border: solid 1px;
+  background: rgba(0,0,0,.75);
+  box-shadow: 0 0 2rem rgba(46,204,113,.25) inset;
+  overflow: scroll;
+}
+.modal .content .modal-header {
+  display: flex;
+  background: black;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  gap: 1rem;
+}
+.modal .content .modal-header .modal-title {
+  margin: 0 auto 0 0;
+  font-size: large;
+  @media screen and (min-width: 480px) {
+    font-size: x-large;
+  }
+}
+.modal .content .inner {
+  padding: 1rem 1rem 0;
+  @media screen and (min-width: 480px) {
+    padding: 1rem 2rem 0;
+  }
+}
+.modal .content *:last-child {
+  margin-bottom: 0;
+}
+.modal .content .modal-footer {
+  padding-top: 1rem;
+  text-align: center;
+  font-size: small;
+  border-top: solid 1px;
+}
+
+.position-top-left {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+}
+.position-top-right {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+}
+.position-bottom-left {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 1rem;
+  @media screen and (min-width: 480px) {
+    bottom: 1rem;
+  }
+}
+.position-bottom-right {
+  position: fixed;
+  bottom: 2.5rem;
+  right: 1rem;
+  @media screen and (min-width: 480px) {
+    bottom: 1rem;
+  }
+}
+
+.flex-horizontal {
+  display: flex;
+  gap: .5rem;
+  flex-direction: row;
+}
+.flex-vertical {
+  display: flex;
+  gap: .5rem;
+  flex-direction: column;
+}
+
+.app-title {
+  position: fixed;
+  top: 0;
+  left: 50vw;
+  transform: translateX(-50%);
+  padding: 1rem 0;
+  font-size: medium;
+  text-align: center;
+  color: white;
+  opacity: .5;
+  transition: none;
+}
+
+.app-copyright {
+  position: fixed;
+  bottom: .5rem;
+  left: 50vw;
+  transform: translateX(-50%);
+  padding: .5rem 0;
+  font-size: small;
+  text-align: center;
+  color: white;
+  opacity: .5;
+  transition: none;
+  @media screen and (min-width: 480px) {
+    bottom: 0;
+  }
+}
+
+.celestials-info {
+  position: fixed;
+  bottom: 6rem;
+  left: 1rem;
+  @media screen and (min-width: 480px) {
+    bottom: 4.5rem;
+  }
+}
+.celestials-info .title {
+  margin: .5em 0;
+  padding: 0 .5rem;
+  font-size: small;
+  line-height: 1;
+  @media screen and (min-width: 480px) {
+    font-size: medium;
+  }
+}
+.celestials-info .earth     { border-left: solid 2px #3498DB; }
+.celestials-info .moon      { border-left: solid 2px #F1C40F; }
+.celestials-info .satellite { border-left: solid 2px #E74C3C; }
+.celestials-info .info {
+  width: 16em;
+  padding-left: 1rem;
+  font-size: x-small;
+  white-space: pre-line;
+  @media screen and (min-width: 480px) {
+    font-size: small;
+  }
+}
+.celestials-info .info.time {
+  margin-top: .5em;
+  padding-top: .5em;
+  text-align: right;
+  border-top: solid 1px;
+}
+
+#modalSettings .fieldset {
+  margin: 1rem 0;
+  padding: 0 0 0 1rem;
+  border-style: none none none solid;
+  border-left-width: 2px;
+}
+#modalSettings .fieldset.earth     { border-left-color: #3498DB; }
+#modalSettings .fieldset.moon      { border-left-color: #F1C40F; }
+#modalSettings .fieldset.satellite { border-left-color: #E74C3C; }
+#modalSettings .fieldset .fieldset-title {
+  font-weight: bold;
+}
+#modalSettings .field-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+#modalSettings .field-name {
+  width: 4rem;
+  font-size: small;
+  @media screen and (min-width: 480px) {
+    font-size: medium;
+  }
+}
+#modalSettings label {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  font-size: small;
+  @media screen and (min-width: 480px) {
+    font-size: medium;
+  }
+}
+#modalSettings label span:after {
+  content: ' :';
+}
+#modalSettings input {
+  display: inline-block;
+  width: 5em;
+  font-size: x-small;
+  text-align: right;
+  @media screen and (min-width: 480px) {
+    font-size: small;
+  }
+}
+#modalSettings input:focus {
+  background: rgba(46,204,113,.25);
+  border-style: none none solid;
+}
+#modalSettings .coordinate-input {
+  display: flex;
+  margin-left: .5rem;
+  flex-direction: row;
+  align-items: baseline;
+  gap: .5rem;
+}
+</style>
+</head>
+<body>
+<div class="fullscreen background-image"></div>
+<div class="fullscreen background-color"></div>
+<div>
+  <h1 class="app-title">ORBIT SIMULATOR</h1>
+
+  <footer class="app-copyright">&copy;2025 SUWA Hiroyuki</footer>
+
+  <div class="celestials-info">
+    <div class="earth"><h2 class="title">the Earth</h2><div id="infoEarth" class="info" hidden></div></div>
+    <div class="moon"><h2 class="title">the Moon</h2><div id="infoMoon" class="info" hidden></div></div>
+    <div class="satellite"><h2 class="title">the Satellite</h2><div id="infoSatellite" class="info" hidden></div></div>
+    <div id="infoTime" class="info time" hidden></div>
+  </div>
+
+  <canvas class="fullscreen" id="canvas" onclick="toggleRun()">the simulation results will appear here.</canvas>
+
+  <div class="position-top-left">
+    <button type="button" onclick="openModalSettings()" class="material-icons">tune</button>
+  </div>
+
+  <div class="position-top-right">
+    <button type="button" onclick="reset()" class="material-icons">skip_previous</button>
+  </div>
+
+  <div class="position-bottom-left flex-horizontal">
+    <button type="button" id="toggleRun" onclick="toggleRun()" class="material-icons">play_arrow</button>
+    <button type="button" onclick="speedDown()" class="material-icons">remove</button>
+    <button type="button" onclick="speedUp()" class="material-icons">add</button>
+  </div>
+
+  <div class="position-bottom-right flex-vertical">
+    <button type="button" onclick="zoomIn()" class="material-icons">zoom_in</button>
+    <button type="button" onclick="zoomOut()" class="material-icons">zoom_out</button>
+  </div>
+
+  <div id="modalSettings" class="modal" hidden>
+    <div class="background" onclick="closeModalSettings()"></div>
+    <div class="content">
+      <div class="modal-header">
+        <button type="button" class="material-icons" onclick="closeModalSettings()">close</button>
+        <h2 class="modal-title">Settings</h2>
+        <button type="button" onclick="restoreDefault()" class="material-icons">replay</button>
+        <button type="submit" form="formSetting" class="material-icons">check</button>
+      </div>
+
+      <form id="formSetting" class="inner">
+        <input type="hidden" name="query" value="true" />
+        <div>
+          <label><span>precision of simulation</span><input name="precision" type="number" min="30" max="3000" step="30" value="120" /></label>
+        </div>
+
+        <fieldset class="fieldset earth">
+          <span class="fieldset-title">the Earth</span>
+          <div class="field-row mass">
+            <label><span>mass</span><input name="earth[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+          </div>
+          <div>
+            <div class="field-row">
+              <span class="field-name">position</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="earth[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="earth[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+            <div class="field-row">
+              <span class="field-name">velocity</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="earth[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="earth[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset moon">
+          <span class="fieldset-title">the Moon</span>
+          <div class="field-row mass">
+            <label><span>mass</span><input name="moon[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+          </div>
+          <div>
+            <div class="field-row">
+              <span class="field-name">position</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="moon[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="moon[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+            <div class="field-row">
+              <span class="field-name">velocity</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="moon[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="moon[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset satellite">
+          <span class="fieldset-title">the Satellite</span>
+          <div class="field-row mass">
+            <label><span>mass</span><input name="satellite[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+          </div>
+          <div>
+            <div class="field-row">
+              <span class="field-name">position</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="satellite[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="satellite[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+            <div class="field-row">
+              <span class="field-name">velocity</span>
+              <div class="coordinate-input">
+                <label><span>X</span><input name="satellite[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="satellite[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="modal-footer">
+        ORBIT SIMULATOR<br />
+        &copy;2025 SUWA Hiroyuki<br />
+        <a href="https://github.com/hiroyuki-suwa/" target="_blank">https://github.com/hiroyuki-suwa/</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+const G = 1;
+const _2PI = 2*Math.PI;
+
+// cf. https://materialui.co/flatuicolors
+const flatuicolors = {
+  emerald:    '#2ECC71',
+  peterriver: '#3498DB',
+  sunflower:  '#F1C40F',
+  alizarin:   '#E74C3C',
+};
+
+const colors = {
+  indices:    flatuicolors.emerald,
+  earth:      flatuicolors.peterriver,
+  moon:       flatuicolors.sunflower,
+  satellite:  flatuicolors.alizarin,
+};
+
+const ui = {
+  canvas: document.getElementById('canvas'),
+  info: {
+    earth:      document.getElementById('infoEarth'),
+    moon:       document.getElementById('infoMoon'),
+    satellite:  document.getElementById('infoSatellite'),
+    time:       document.getElementById('infoTime'),
+  },
+  modals: {
+    settings: document.getElementById('modalSettings'),
+  },
+  buttons: { 
+    toggleRun: document.getElementById('toggleRun'),
+  },
+  fieldsets: {
+    precision: document.getElementsByName('precision')[0],
+    earth: {
+      position: {
+        x: document.getElementsByName('earth[position][x]')[0],
+        y: document.getElementsByName('earth[position][y]')[0],
+      },
+      velocity: {
+        x: document.getElementsByName('earth[velocity][x]')[0],
+        y: document.getElementsByName('earth[velocity][y]')[0],
+      },
+      mass: document.getElementsByName('earth[mass]')[0],
+    },
+    moon: {
+      position: {
+        x: document.getElementsByName('moon[position][x]')[0],
+        y: document.getElementsByName('moon[position][y]')[0],
+      },
+      velocity: {
+        x: document.getElementsByName('moon[velocity][x]')[0],
+        y: document.getElementsByName('moon[velocity][y]')[0],
+      },
+      mass: document.getElementsByName('moon[mass]')[0],
+    },
+    satellite: {
+      position: {
+        x: document.getElementsByName('satellite[position][x]')[0],
+        y: document.getElementsByName('satellite[position][y]')[0],
+      },
+      velocity: {
+        x: document.getElementsByName('satellite[velocity][x]')[0],
+        y: document.getElementsByName('satellite[velocity][y]')[0],
+      },
+      mass: document.getElementsByName('satellite[mass]')[0],
+    },
+  },
+};
+
+const state = {
+  running: false,
+  timerId: null,
+  precision: null,
+  time: 0,
+  speedLevel: 0,
+  zoomLevel: 0,
+  celestials: {
+    earth: {
+      position: { x: null, y: null },
+      velocity: { x: null, y: null },
+      mass: null,
+      radius: null,
+    },
+    moon: {
+      position: { x: null, y: null },
+      velocity: { x: null, y: null },
+      mass: null,
+      radius: null,
+    },
+    satellite: {
+      position: { x: null, y: null },
+      velocity: { x: null, y: null },
+      mass: null,
+      radius: null,
+    },
+  },
+};
+
+const getters = {
+  isRunning:      () => state.running,
+  timerId:        () => state.timerId,
+  time:           () => state.time,
+  speedLevel:     () => state.speedLevel,
+  timeScale:      () => phiTo(state.speedLevel),
+  precision:      () => state.precision,
+  zoomLevel:      () => state.zoomLevel,
+  renderingScale: () => .25*Math.min(ui.canvas.width, ui.canvas.height)*phiTo(state.zoomLevel),
+  celestials:     () => state.celestials,
+  earth:          () => state.celestials.earth,
+  moon:           () => state.celestials.moon,
+  satellite:      () => state.celestials.satellite,
+};
+
+const mutations = {
+  setRunning:     (status)          => { state.running = status; },
+  setPrecision:   (precision)       => { state.precision = precision; },
+  setTimerId:     (timerId)         => { state.timerId = timerId; },
+  resetTime:      ()                => { state.time = 0; },
+  incrementTime:  ()                => { state.time += getters.timeScale(); },
+  setZoomLevel:   (zoomLevel)       => { state.zoomLevel = zoomLevel; },
+  setSpeedLevel:  (speedLevel)      => { state.speedLevel = speedLevel; },
+  setCelestials:  (celestials)      => { state.celestials = celestials; },
+  setMass:        (name, mass)      => { state.celestials[name].mass = mass; },
+};
+
+// actions
+const reset = () => { initialize(); };
+
+const restoreDefault = () => { confirm('Are you sure you want to reset all settings to default?') && initialize(false); };
+
+const initialize = (loadFromParams = true) => {
+  stopSimulation();
+  const queryString = window.location.search;
+  const params = new URLSearchParams(queryString);
+  loadFromParams && params.get('query') == 'true'
+    ? setStateParamsValue(params)
+    : setStateDefaultValue();
+  renderResults();
+  updateUIControlls();
+};
+
+const setStateDefaultValue = () => {
+  const M = 1;
+  const m = 1/81.3; // the actual mass of the Moon compared to the Earth is aprox. 1/81.3
+  mutations.resetTime();
+  mutations.setPrecision(120);
+  mutations.setZoomLevel(0);
+  mutations.setSpeedLevel(0);
+  mutations.setCelestials({
+    earth: {
+      position: { x: 0, y: m/(M+m) },
+      velocity: { x: -m/(M+m), y: 0 },
+      mass: 1,
+      radius: 1/60, // the actual radius of the Earth is aprox. 1/60 of the distance between of the Moon and the Earth.
+    },
+    moon: {
+      position: { x: 0, y: -M/(M+m) },
+      velocity: { x: M/(M+m), y: 0 },
+      mass: m,
+      radius: 1/220, // the actual radius of the Moon is aprox. 1/220 of the distance between of the Moon and the Earth.
+    },
+    satellite: {
+      position: { x: 0, y: -.25/(M+m) },
+      velocity: { x: 2/(M+m), y: 0 },
+      mass: 0,
+      radius: 0,
+    },
+  });
+};
+
+const setStateParamsValue = (params) => {
+  mutations.resetTime();
+  mutations.setPrecision(Number(params.get('precision') || 120));
+  mutations.setZoomLevel(0);
+  mutations.setSpeedLevel(0);
+  mutations.setCelestials({
+    earth: {
+      position: {
+        x: Number(params.get('earth[position][x]') || 0),
+        y: Number(params.get('earth[position][y]') || 0),
+      },
+      velocity: {
+        x: Number(params.get('earth[velocity][x]') || 0),
+        y: Number(params.get('earth[velocity][y]') || 0),
+      },
+      mass: Number(params.get('earth[mass]') || 0),
+      radius: 1/60,
+    },
+    moon: {
+      position: {
+        x: Number(params.get('moon[position][x]') || 0),
+        y: Number(params.get('moon[position][y]') || 0),
+      },
+      velocity: {
+        x: Number(params.get('moon[velocity][x]') || 0),
+        y: Number(params.get('moon[velocity][y]') || 0),
+      },
+      mass: Number(params.get('moon[mass]') || 0),
+      radius: 1/220,
+    },
+    satellite: {
+      position: {
+        x: Number(params.get('satellite[position][x]') || 0),
+        y: Number(params.get('satellite[position][y]') || 0),
+      },
+      velocity: {
+        x: Number(params.get('satellite[velocity][x]') || 0),
+        y: Number(params.get('satellite[velocity][y]') || 0),
+      },
+      mass: Number(params.get('satellite[mass]') || 0),
+      radius: 0,
+    },
+  });
+};
+
+// simulation controlls
+const startSimulation = () => {
+  mutations.setRunning(true);
+  updateRunningButton(true);
+  mutations.setTimerId(
+    setInterval(simulate, 1000/getters.precision())
+  );
+};
+
+const stopSimulation = () => {
+  mutations.setRunning(false);
+  updateRunningButton(false);
+  clearInterval(getters.timerId());
+};
+
+const toggleRun = () => { getters.isRunning() ? stopSimulation() : startSimulation(); };
+
+const speedUp   = () => { mutations.setSpeedLevel(getters.speedLevel()+1); };
+const speedDown = () => { mutations.setSpeedLevel(getters.speedLevel()-1); };
+
+const zoomIn  = () => { mutations.setZoomLevel(getters.zoomLevel()+1); renderResults(); };
+const zoomOut = () => { mutations.setZoomLevel(getters.zoomLevel()-1); renderResults(); };
+
+// astrophysical simulations
+const simulate = () => {
+  mutations.setCelestials(
+    calculateNextCelestials(
+      getters.celestials(),
+      getters.timeScale()/getters.precision()
+    )
+  );
+  mutations.incrementTime();
+  renderResults();
+};
+
+const calculateNextCelestials = (celestials, timeSpan) => ({
+  earth: calculateNextEarth(celestials, timeSpan),
+  moon: calculateNextMoon(celestials, timeSpan),
+  satellite: calculateNextSatellite(celestials, timeSpan),
+});
+
+const calculateNextEarth = ({ earth, moon, satellite }, dt) => {
+  const distanceToMoon = distance({ from: earth.position, to: moon.position});
+  const accelerationTowardMoon = scaleVector(
+    G*moon.mass/distanceToMoon**2,
+    direction({ from: earth.position, to: moon.position })
+  );
+  const distanceToSatellite = distance({ from: earth.position, to: satellite.position});
+  const accelerationTowardSatellite = scaleVector(
+    G*satellite.mass/distanceToSatellite**2,
+    direction({ from: earth.position, to: satellite.position })
+  );
+  const acceleration = {
+    x: accelerationTowardMoon.x + accelerationTowardSatellite.x,
+    y: accelerationTowardMoon.y + accelerationTowardSatellite.y,
+  };
+  const velocity = {
+    x: earth.velocity.x + acceleration.x*dt,
+    y: earth.velocity.y + acceleration.y*dt,
+  };
+  const position = {
+    x: earth.position.x + earth.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
+    y: earth.position.y + earth.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+  };
+  return { ...earth, position, velocity };
+};
+
+const calculateNextMoon = ({ earth, moon, satellite }, dt) => {
+  const distanceToEarth = distance({ from: moon.position, to: earth.position });
+  const accelerationTowardEarth = scaleVector(
+    G*earth.mass/distanceToEarth**2,
+    direction({ from:moon.position, to:earth.position })
+  );
+  const distanceToSatellite = distance({ from: moon.position, to: satellite.position});
+  const accelerationTowardSatellite = scaleVector(
+    G*satellite.mass/distanceToSatellite**2,
+    direction({ from: moon.position, to: satellite.position })
+  );
+  const acceleration = {
+    x: accelerationTowardEarth.x + accelerationTowardSatellite.x,
+    y: accelerationTowardEarth.y + accelerationTowardSatellite.y,
+  };
+  const velocity = {
+    x: moon.velocity.x + acceleration.x*dt,
+    y: moon.velocity.y + acceleration.y*dt,
+  };
+  const position = {
+    x: moon.position.x + moon.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
+    y: moon.position.y + moon.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+  };
+  return { ...moon, position, velocity };
+};
+
+const calculateNextSatellite = ({ earth, moon, satellite }, dt) => {
+  const distanceToEarth = distance({ from: satellite.position, to: earth.position });
+  const accelerationTowardEarth = scaleVector(
+    G*earth.mass/distanceToEarth**2,
+    direction({ from: satellite.position, to: earth.position })
+  );
+  const distanceToMoon = distance({ from: satellite.position, to: moon.position });
+  const accelerationTowardMoon = scaleVector(
+    G*moon.mass/distanceToMoon**2,
+    direction({ from: satellite.position, to: moon.position })
+  );
+  const acceleration = {
+    x: accelerationTowardEarth.x + accelerationTowardMoon.x,
+    y: accelerationTowardEarth.y + accelerationTowardMoon.y,
+  };
+  const velocity = {
+    x: satellite.velocity.x + acceleration.x*dt,
+    y: satellite.velocity.y + acceleration.y*dt,
+  };
+  const position = {
+    x: satellite.position.x + satellite.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
+    y: satellite.position.y + satellite.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+  };
+  return { ...satellite, position, velocity };
+};
+
+// rendering controlls on canvas
+const ctx = ui.canvas.getContext('2d');
+
+const renderResults = () => {
+  const celestials = getters.celestials();
+  clearCanvas();
+  renderScene(celestials, getters.renderingScale());
+  displayInfo(celestials, getters.time());
+};
+
+const clearCanvas = () => {
+  ui.canvas.width = window.innerWidth;
+  ui.canvas.height = window.innerHeight;
+};
+
+const renderScene = ({ earth, moon, satellite }, scale) => {
+  drawIndices(scale);
+  drawCelestial(earth, colors.earth, scale);
+  drawCelestial(moon, colors.moon, scale);
+  drawCelestial(satellite, colors.satellite, scale);
+};
+
+const drawIndices = (scale) => {
+  const { x, y } = transformToRenderingCoordinate({ x: 0, y: 0 }, scale);
+  const a = 1*scale
+  const offset = .25*a;
+  ctx.strokeStyle = colors.indices;
+  ctx.lineWidth = 1;
+  // round bezel
+  ctx.beginPath();
+  ctx.arc(x, y, a, 0, _2PI);
+  ctx.closePath();
+  ctx.stroke();
+  // four direction markers
+  [
+    [x, y - offset, x, y - a - offset], // 12 o'clock
+    [x + offset, y, x + a + offset, y], //  3 o'clock
+    [x, y + offset, x, y + a + offset], //  6 o'clock
+    [x - offset, y, x - a - offset, y], //  9 o'clock
+  ].forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  });
+};
+
+const drawCelestial = ({ position, radius }, color, scale) => {
+  const { x, y } = transformToRenderingCoordinate(position, scale);
+  const r = Math.max(6, radius * scale);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, _2PI);
+  ctx.closePath();
+  ctx.fill();
+};
+
+const displayInfo = ({ earth, moon, satellite }, time) => {
+  if (!time) {
+    hide(ui.info.earth);
+    hide(ui.info.moon);
+    hide(ui.info.satellite);
+    hide(ui.info.time);
+    ui.info.earth.innerText = '';
+    ui.info.moon.innerText = '';
+    ui.info.satellite.innerText = '';
+    ui.info.time.innerText = '';
+    return;
+  }
+  ui.info.earth.innerText
+    = `Position : ( ${earth.position.x.toFixed(4)    } , ${earth.position.y.toFixed(4)    } )
+       Velocity : ( ${earth.velocity.x.toFixed(4)    } , ${earth.velocity.y.toFixed(4)    } )
+       Speed : ${norm(earth.velocity).toFixed(4)}`;
+  ui.info.moon.innerText
+    = `Position : ( ${moon.position.x.toFixed(4)     } , ${moon.position.y.toFixed(4)     } )
+       Velocity : ( ${moon.velocity.x.toFixed(4)     } , ${moon.velocity.y.toFixed(4)     } )
+       Speed : ${norm(moon.velocity).toFixed(4)}`;
+  ui.info.satellite.innerText
+    = `Position : ( ${satellite.position.x.toFixed(4)} , ${satellite.position.y.toFixed(4)} )
+       Velocity : ( ${satellite.velocity.x.toFixed(4)} , ${satellite.velocity.y.toFixed(4)} )
+       Speed : ${norm(satellite.velocity).toFixed(4)}`;
+  ui.info.time.innerText
+    = `Elapsed time : ${time.toFixed(4)}`;
+  reveal(ui.info.earth);
+  reveal(ui.info.moon);
+  reveal(ui.info.satellite);
+  reveal(ui.info.time);
+};
+
+// modal controlls
+const openModalSettings = () => { reveal(ui.modals.settings); };
+const closeModalSettings = () => {
+  reset();
+  hide(ui.modals.settings);
+};
+
+const reveal = (target) => { target.removeAttribute('hidden'); };
+const hide = (target) => { target.setAttribute('hidden', true); };
+
+// other ui controlls
+const updateUIControlls = () => {
+  updateFieldsets();
+  updateRunningButton();
+};
+
+const updateRunningButton = () => { ui.buttons.toggleRun.textContent = getters.isRunning() ? 'pause' : 'play_arrow'; };
+
+const updateFieldsets = () => {
+  const { earth, moon, satellite } = getters.celestials();
+  ui.fieldsets.earth.position.x.value = earth.position.x.toFixed(4);
+  ui.fieldsets.earth.position.y.value = earth.position.y.toFixed(4);
+  ui.fieldsets.earth.velocity.x.value = earth.velocity.x.toFixed(4);
+  ui.fieldsets.earth.velocity.y.value = earth.velocity.y.toFixed(4);
+  ui.fieldsets.earth.mass.value       = earth.mass.toFixed(4);
+  ui.fieldsets.moon.position.x.value  = moon.position.x.toFixed(4);
+  ui.fieldsets.moon.position.y.value  = moon.position.y.toFixed(4);
+  ui.fieldsets.moon.velocity.x.value  = moon.velocity.x.toFixed(4);
+  ui.fieldsets.moon.velocity.y.value  = moon.velocity.y.toFixed(4);
+  ui.fieldsets.moon.mass.value        = moon.mass.toFixed(4);
+  ui.fieldsets.satellite.position.x.value = satellite.position.x.toFixed(4);
+  ui.fieldsets.satellite.position.y.value = satellite.position.y.toFixed(4);
+  ui.fieldsets.satellite.velocity.x.value = satellite.velocity.x.toFixed(4);
+  ui.fieldsets.satellite.velocity.y.value = satellite.velocity.y.toFixed(4);
+  ui.fieldsets.satellite.mass.value       = satellite.mass.toFixed(4);
+  ui.fieldsets.precision.value = getters.precision().toFixed(0);
+};
+
+// mathematical calculations
+const percentage = (n, d) => 100*n/d;
+
+const phiTo = (n) => ((1+Math.sqrt(5))/2)**n; // phi^n where phi is the golden ratio
+
+const distance = ({ from, to }) => norm(difference({ between: from, and: to }));
+
+const direction = ({ from, to }) => unitVector(difference({ between: from, and: to }));
+
+const difference = ({ between, and }) => ({
+  x: and.x - between.x,
+  y: and.y - between.y,
+});
+
+const norm = (vector) => Math.sqrt(vector.x**2 + vector.y**2);
+
+const unitVector = (vector) => scaleVector(1/norm(vector), vector);
+
+const scaleVector = (k, vector) => ({
+  x: k*vector.x,
+  y: k*vector.y,
+});
+
+const transformToRenderingCoordinate = ({ x, y }, scale) => ({
+  x: scale*x + canvasCenter().x,
+  y: scale*y + canvasCenter().y,
+});
+
+const canvasCenter = () => ({
+  x: ui.canvas.width/2,
+  y: ui.canvas.height/2,
+});
+
+document.onkeydown = ({ key }) => {
+  switch (key) {
+    case ' ': toggleRun(); break;
+    case 'ArrowUp': zoomIn(); break;
+    case 'ArrowDown': zoomOut(); break;
+    case 'ArrowLeft': speedDown(); break;
+    case 'ArrowRight': speedUp(); break;
+    case 'r': reset(); break;
+    case 's': openModalSettings(); break;
+    case 'Escape': closeModalSettings(); break;
+  }
+};
+
+window.onload = initialize;
+window.onresize = renderResults;
+</script>
+</body>
+</html>
