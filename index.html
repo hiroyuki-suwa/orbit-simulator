@@ -384,6 +384,7 @@ input {
 
       <form id="formSetting" class="inner">
         <input type="hidden" name="query" value="true" />
+
         <div>
           <label><span>duration of trajectories</span><input name="trajectoryDuration" type="number" min="0" max="1000000" step="100" value="10000" /></label>
         </div>
@@ -637,7 +638,7 @@ const setStateDefaultValue = () => {
   const m = 1/81.3; // the actual mass of the Moon compared to the Earth is aprox. 1/81.3
   mutations.resetTime();
   mutations.clearTrajectories();
-  mutations.setTrajectoryDuration(10000);
+  mutations.setTrajectoryDuration(2000);
   mutations.setAccuracy(240);
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
@@ -666,7 +667,7 @@ const setStateDefaultValue = () => {
 const setStateParamsValue = (params) => {
   mutations.resetTime();
   mutations.clearTrajectories();
-  mutations.setTrajectoryDuration(Number(params.get('trajectoryDuration') || 10000));
+  mutations.setTrajectoryDuration(Number(params.get('trajectoryDuration') || 2000));
   mutations.setAccuracy(Number(params.get('accuracy') || 240));
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
@@ -863,24 +864,27 @@ const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
   if (!trajectory.length) return;
 
   const n = parseInt(duration/sections);
-  trajectory.reverse();
-  trajectory.splice(duration);
+  const _trajectory = [ ...trajectory ];
+  _trajectory.reverse();
+  _trajectory.splice(duration);
 
   Array(sections).keys().forEach((section) => {
+    const segment = _trajectory.slice(n * section, n * (section + 1) + 2);
+    const startPosition = segment.shift();
+    if (!startPosition) return;
+
     const opacity = 1 - section/sections;
     ctx.strokeStyle = `rgb(${color.r} ${color.g} ${color.b} / ${100*opacity}%)`;
     ctx.lineWidth = 1;
-    const segment = trajectory.slice(n * section, n * (section + 1) + 2);
-    const startPosition = segment.shift();
-    if (!startPosition) return false;
-
     const { x, y } = transformToRenderingCoordinate(startPosition, scale);
     ctx.moveTo(startPosition.x, startPosition.y);
     ctx.beginPath();
+
     segment.forEach((position) => {
       const { x, y } = transformToRenderingCoordinate(position, scale);
       ctx.lineTo(x, y);
     });
+
     ctx.stroke();
   });
 };
