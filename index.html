@@ -379,7 +379,7 @@ input {
       <form id="formSetting" class="inner">
         <input type="hidden" name="query" value="true" />
         <div>
-          <label><span>precision of simulation</span><input name="precision" type="number" min="30" max="3000" step="30" value="120" /></label>
+          <label><span>accuracy of simulation</span><input name="accuracy" type="number" min="30" max="3000" step="30" value="120" /></label>
         </div>
 
         <fieldset class="fieldset earth">
@@ -494,7 +494,7 @@ const ui = {
     toggleRun: document.getElementById('toggleRun'),
   },
   fieldsets: {
-    precision: document.getElementsByName('precision')[0],
+    accuracy: document.getElementsByName('accuracy')[0],
     earth: {
       position: {
         x: document.getElementsByName('earth[position][x]')[0],
@@ -534,7 +534,7 @@ const ui = {
 const state = {
   running: false,
   timerId: null,
-  precision: null,
+  accuracy: null,
   time: 0,
   speedLevel: 0,
   zoomLevel: 0,
@@ -566,7 +566,7 @@ const getters = {
   time:           () => state.time,
   speedLevel:     () => state.speedLevel,
   timeScale:      () => phiTo(state.speedLevel),
-  precision:      () => state.precision,
+  accuracy:      () => state.accuracy,
   zoomLevel:      () => state.zoomLevel,
   renderingScale: () => .25*Math.min(ui.canvas.width, ui.canvas.height)*phiTo(state.zoomLevel),
   celestials:     () => state.celestials,
@@ -577,7 +577,7 @@ const getters = {
 
 const mutations = {
   setRunning:     (status)      => { state.running = status; },
-  setPrecision:   (precision)   => { state.precision = precision; },
+  setaccuracy:   (accuracy)   => { state.accuracy = accuracy; },
   setTimerId:     (timerId)     => { state.timerId = timerId; },
   resetTime:      ()            => { state.time = 0; },
   incrementTime:  ()            => { state.time += getters.timeScale(); },
@@ -606,7 +606,7 @@ const setStateDefaultValue = () => {
   const M = 1;
   const m = 1/81.3; // the actual mass of the Moon compared to the Earth is aprox. 1/81.3
   mutations.resetTime();
-  mutations.setPrecision(120);
+  mutations.setaccuracy(240);
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
   mutations.setCelestials({
@@ -623,8 +623,8 @@ const setStateDefaultValue = () => {
       radius: 1/220, // the actual radius of the Moon is aprox. 1/220 of the distance between of the Moon and the Earth.
     },
     satellite: {
-      position: { x: 0, y: -.25/(M+m) },
-      velocity: { x: 2/(M+m), y: 0 },
+      position: { x: 0, y: -1.08 },
+      velocity: { x: .64, y: 0 },
       mass: 0,
       radius: 0,
     },
@@ -633,7 +633,7 @@ const setStateDefaultValue = () => {
 
 const setStateParamsValue = (params) => {
   mutations.resetTime();
-  mutations.setPrecision(Number(params.get('precision') || 120));
+  mutations.setaccuracy(Number(params.get('accuracy') || 240));
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
   mutations.setCelestials({
@@ -681,7 +681,7 @@ const startSimulation = () => {
   mutations.setRunning(true);
   updateRunningButton(true);
   mutations.setTimerId(
-    setInterval(simulate, 1000/getters.precision())
+    setInterval(simulate, 1000/getters.accuracy())
   );
 };
 
@@ -704,7 +704,7 @@ const simulate = () => {
   mutations.setCelestials(
     calculateNextCelestials(
       getters.celestials(),
-      getters.timeScale()/getters.precision()
+      getters.timeScale()/getters.accuracy()
     )
   );
   mutations.incrementTime();
@@ -903,7 +903,7 @@ const updateFieldsets = () => {
   ui.fieldsets.satellite.velocity.x.value = satellite.velocity.x.toFixed(4);
   ui.fieldsets.satellite.velocity.y.value = satellite.velocity.y.toFixed(4);
   ui.fieldsets.satellite.mass.value       = satellite.mass.toFixed(4);
-  ui.fieldsets.precision.value = getters.precision().toFixed(0);
+  ui.fieldsets.accuracy.value = getters.accuracy().toFixed(0);
 };
 
 // mathematical calculations
