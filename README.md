@@ -29,7 +29,9 @@ https://storage.googleapis.com/orbitsim/index.html
 
 ## License
 
-MIT License
+[MIT License](LICENSE)
 
-&copy;2025 SUWA Hiroyuki  
+## Author
+
+&copy;2025 諏訪宏幸 / SUWA Hiroyuki  
 https://github.com/hiroyuki-suwa/
