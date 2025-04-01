@@ -385,6 +385,10 @@ input {
       <form id="formSetting" class="inner">
         <input type="hidden" name="query" value="true" />
         <div>
+          <label><span>duration of trajectories</span><input name="trajectoryDuration" type="number" min="0" max="1000000" step="100" value="10000" /></label>
+        </div>
+
+        <div>
           <label><span>accuracy of simulation</span><input name="accuracy" type="number" min="30" max="3000" step="30" value="120" /></label>
         </div>
 
@@ -472,10 +476,10 @@ const _2PI = 2*Math.PI;
 
 // cf. https://materialui.co/flatuicolors
 const flatuicolors = {
-  emerald:    '#2ECC71',
-  peterriver: '#3498DB',
-  sunflower:  '#F1C40F',
-  alizarin:   '#E74C3C',
+  emerald:    { r: 46, g:204, b:113 }, // #2ECC71
+  peterriver: { r: 52, g:152, b:219 }, // #3498DB
+  sunflower:  { r:241, g:196, b: 15 }, // #F1C40F
+  alizarin:   { r:231, g: 76, b: 60 }, // #E74C3C
 };
 
 const colors = {
@@ -500,7 +504,8 @@ const ui = {
     toggleRun: document.getElementById('toggleRun'),
   },
   fieldsets: {
-    accuracy: document.getElementsByName('accuracy')[0],
+    trajectoryDuration: document.getElementsByName('trajectoryDuration')[0],
+    accuracy:           document.getElementsByName('accuracy')[0],
     earth: {
       position: {
         x: document.getElementsByName('earth[position][x]')[0],
@@ -564,6 +569,11 @@ const state = {
       radius: null,
     },
   },
+  trajectories: {
+    earth: [],
+    moon: [],
+    satellite: [],
+  },
 };
 
 const getters = {
@@ -572,24 +582,38 @@ const getters = {
   time:           () => state.time,
   speedLevel:     () => state.speedLevel,
   timeScale:      () => phiTo(state.speedLevel),
-  accuracy:      () => state.accuracy,
+  accuracy:       () => state.accuracy,
   zoomLevel:      () => state.zoomLevel,
   renderingScale: () => .25*Math.min(ui.canvas.width, ui.canvas.height)*phiTo(state.zoomLevel),
   celestials:     () => state.celestials,
-  earth:          () => state.celestials.earth,
-  moon:           () => state.celestials.moon,
-  satellite:      () => state.celestials.satellite,
+  trajectories:   () => ({
+    earth:      [ ...state.trajectories.earth ],
+    moon:       [ ...state.trajectories.moon ],
+    satellite:  [ ...state.trajectories.satellite ],
+  }),
+  trajectoryDuration: () => state.trajectoryDuration,
 };
 
 const mutations = {
   setRunning:     (status)      => { state.running = status; },
-  setaccuracy:   (accuracy)   => { state.accuracy = accuracy; },
+  setAccuracy:    (accuracy)    => { state.accuracy = accuracy; },
   setTimerId:     (timerId)     => { state.timerId = timerId; },
   resetTime:      ()            => { state.time = 0; },
   incrementTime:  ()            => { state.time += getters.timeScale(); },
   setZoomLevel:   (zoomLevel)   => { state.zoomLevel = zoomLevel; },
   setSpeedLevel:  (speedLevel)  => { state.speedLevel = speedLevel; },
   setCelestials:  (celestials)  => { state.celestials = celestials; },
+  updateTrajectories: () => {
+    state.trajectories.earth.push(state.celestials.earth.position);
+    state.trajectories.moon.push(state.celestials.moon.position);
+    state.trajectories.satellite.push(state.celestials.satellite.position);
+  },
+  clearTrajectories: () => {
+    state.trajectories.earth = [];
+    state.trajectories.moon = [];
+    state.trajectories.satellite = [];
+  },
+  setTrajectoryDuration: (duration) => { state.trajectoryDuration = duration; },
 };
 
 // actions
@@ -612,7 +636,9 @@ const setStateDefaultValue = () => {
   const M = 1;
   const m = 1/81.3; // the actual mass of the Moon compared to the Earth is aprox. 1/81.3
   mutations.resetTime();
-  mutations.setaccuracy(240);
+  mutations.clearTrajectories();
+  mutations.setTrajectoryDuration(10000);
+  mutations.setAccuracy(240);
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
   mutations.setCelestials({
@@ -639,7 +665,9 @@ const setStateDefaultValue = () => {
 
 const setStateParamsValue = (params) => {
   mutations.resetTime();
-  mutations.setaccuracy(Number(params.get('accuracy') || 240));
+  mutations.clearTrajectories();
+  mutations.setTrajectoryDuration(Number(params.get('trajectoryDuration') || 10000));
+  mutations.setAccuracy(Number(params.get('accuracy') || 240));
   mutations.setZoomLevel(0);
   mutations.setSpeedLevel(0);
   mutations.setCelestials({
@@ -713,6 +741,7 @@ const simulate = () => {
       getters.timeScale()/getters.accuracy()
     )
   );
+  mutations.updateTrajectories();
   mutations.incrementTime();
   renderResults();
 };
@@ -791,7 +820,7 @@ const ctx = ui.canvas.getContext('2d');
 const renderResults = () => {
   const celestials = getters.celestials();
   clearCanvas();
-  renderScene(celestials, getters.renderingScale());
+  renderScene(celestials, getters.trajectories(), getters.renderingScale(), getters.trajectoryDuration());
   displayInfo(celestials, getters.time());
 };
 
@@ -800,25 +829,23 @@ const clearCanvas = () => {
   ui.canvas.height = window.innerHeight;
 };
 
-const renderScene = ({ earth, moon, satellite }, scale) => {
+const renderScene = (celestials, trajectories, scale, duration) => {
   drawIndices(scale);
-  drawCelestial(earth, colors.earth, scale);
-  drawCelestial(moon, colors.moon, scale);
-  drawCelestial(satellite, colors.satellite, scale);
+  drawTrajectory(trajectories.earth, colors.earth, scale, duration);
+  drawTrajectory(trajectories.moon, colors.moon, scale, duration);
+  drawTrajectory(trajectories.satellite, colors.satellite, scale, duration);
+  drawCelestial(celestials.earth, colors.earth, scale);
+  drawCelestial(celestials.moon, colors.moon, scale);
+  drawCelestial(celestials.satellite, colors.satellite, scale);
 };
 
 const drawIndices = (scale) => {
   const { x, y } = transformToRenderingCoordinate({ x: 0, y: 0 }, scale);
   const a = 1*scale
   const offset = .25*a;
-  ctx.strokeStyle = colors.indices;
+  const color = colors.indices;
+  ctx.strokeStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
   ctx.lineWidth = 1;
-  // round bezel
-  ctx.beginPath();
-  ctx.arc(x, y, a, 0, _2PI);
-  ctx.closePath();
-  ctx.stroke();
-  // four direction markers
   [
     [x, y - offset, x, y - a - offset], // 12 o'clock
     [x + offset, y, x + a + offset, y], //  3 o'clock
@@ -832,10 +859,36 @@ const drawIndices = (scale) => {
   });
 };
 
+const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
+  if (!trajectory.length) return;
+
+  const n = parseInt(duration/sections);
+  trajectory.reverse();
+  trajectory.splice(duration);
+
+  Array(sections).keys().forEach((section) => {
+    const opacity = 1 - section/sections;
+    ctx.strokeStyle = `rgb(${color.r} ${color.g} ${color.b} / ${100*opacity}%)`;
+    ctx.lineWidth = 1;
+    const segment = trajectory.slice(n * section, n * (section + 1) + 2);
+    const startPosition = segment.shift();
+    if (!startPosition) return false;
+
+    const { x, y } = transformToRenderingCoordinate(startPosition, scale);
+    ctx.moveTo(startPosition.x, startPosition.y);
+    ctx.beginPath();
+    segment.forEach((position) => {
+      const { x, y } = transformToRenderingCoordinate(position, scale);
+      ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+};
+
 const drawCelestial = ({ position, radius }, color, scale) => {
   const { x, y } = transformToRenderingCoordinate(position, scale);
   const r = Math.max(6, radius * scale);
-  ctx.fillStyle = color;
+  ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, _2PI);
   ctx.closePath();
@@ -909,7 +962,8 @@ const updateFieldsets = () => {
   ui.fieldsets.satellite.velocity.x.value = satellite.velocity.x.toFixed(4);
   ui.fieldsets.satellite.velocity.y.value = satellite.velocity.y.toFixed(4);
   ui.fieldsets.satellite.mass.value       = satellite.mass.toFixed(4);
-  ui.fieldsets.accuracy.value = getters.accuracy().toFixed(0);
+  ui.fieldsets.trajectoryDuration.value = getters.trajectoryDuration().toFixed(0);
+  ui.fieldsets.accuracy.value           = getters.accuracy().toFixed(0);
 };
 
 // mathematical calculations
