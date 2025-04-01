@@ -718,81 +718,189 @@ const calculateNextCelestials = (celestials, timeSpan) => ({
 });
 
 const calculateNextEarth = ({ earth, moon, satellite }, dt) => {
-  const distanceToMoon = distance({ from: earth.position, to: moon.position});
-  const accelerationTowardMoon = scaleVector(
-    G*moon.mass/distanceToMoon**2,
-    direction({ from: earth.position, to: moon.position })
-  );
-  const distanceToSatellite = distance({ from: earth.position, to: satellite.position});
-  const accelerationTowardSatellite = scaleVector(
-    G*satellite.mass/distanceToSatellite**2,
-    direction({ from: earth.position, to: satellite.position })
-  );
-  const acceleration = {
-    x: accelerationTowardMoon.x + accelerationTowardSatellite.x,
-    y: accelerationTowardMoon.y + accelerationTowardSatellite.y,
+  const others = [moon, satellite];
+
+  const k1v = computeAcceleration(earth, others);
+  const k1x = earth.velocity;
+
+  const temp1 = {
+    position: {
+      x: earth.position.x + k1x.x*dt/2,
+      y: earth.position.y + k1x.y*dt/2,
+    },
+    velocity: {
+      x: earth.velocity.x + k1v.x*dt/2,
+      y: earth.velocity.y + k1v.y*dt/2,
+    },
   };
+  const k2v = computeAcceleration(temp1, others);
+  const k2x = temp1.velocity;
+
+  const temp2 = {
+    position: {
+      x: earth.position.x + k2x.x*dt/2,
+      y: earth.position.y + k2x.y*dt/2,
+    },
+    velocity: {
+      x: earth.velocity.x + k2v.x*dt/2,
+      y: earth.velocity.y + k2v.y*dt/2,
+    },
+  };
+  const k3v = computeAcceleration(temp2, others);
+  const k3x = temp2.velocity;
+
+  const temp3 = {
+    position: {
+      x: earth.position.x + k3x.x*dt,
+      y: earth.position.y + k3x.y*dt,
+    },
+    velocity: {
+      x: earth.velocity.x + k3v.x*dt,
+      y: earth.velocity.y + k3v.y*dt,
+    },
+  };
+  const k4v = computeAcceleration(temp3, others);
+  const k4x = temp3.velocity;
+
   const velocity = {
-    x: earth.velocity.x + acceleration.x*dt,
-    y: earth.velocity.y + acceleration.y*dt,
+    x: earth.velocity.x + dt/6*(k1v.x + 2*k2v.x + 2*k3v.x + k4v.x),
+    y: earth.velocity.y + dt/6*(k1v.y + 2*k2v.y + 2*k3v.y + k4v.y),
   };
+
   const position = {
-    x: earth.position.x + earth.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
-    y: earth.position.y + earth.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+    x: earth.position.x + dt/6*(k1x.x + 2*k2x.x + 2*k3x.x + k4x.x),
+    y: earth.position.y + dt/6*(k1x.y + 2*k2x.y + 2*k3x.y + k4x.y),
   };
+
   return { ...earth, position, velocity };
 };
 
 const calculateNextMoon = ({ earth, moon, satellite }, dt) => {
-  const distanceToEarth = distance({ from: moon.position, to: earth.position });
-  const accelerationTowardEarth = scaleVector(
-    G*earth.mass/distanceToEarth**2,
-    direction({ from:moon.position, to:earth.position })
-  );
-  const distanceToSatellite = distance({ from: moon.position, to: satellite.position});
-  const accelerationTowardSatellite = scaleVector(
-    G*satellite.mass/distanceToSatellite**2,
-    direction({ from: moon.position, to: satellite.position })
-  );
-  const acceleration = {
-    x: accelerationTowardEarth.x + accelerationTowardSatellite.x,
-    y: accelerationTowardEarth.y + accelerationTowardSatellite.y,
+  const others = [earth, satellite];
+
+  const k1v = computeAcceleration(moon, others);
+  const k1x = moon.velocity;
+
+  const temp1 = {
+    position: {
+      x: moon.position.x + k1x.x*dt/2,
+      y: moon.position.y + k1x.y*dt/2,
+    },
+    velocity: {
+      x: moon.velocity.x + k1v.x*dt/2,
+      y: moon.velocity.y + k1v.y*dt/2,
+    },
   };
+  const k2v = computeAcceleration(temp1, others);
+  const k2x = temp1.velocity;
+
+  const temp2 = {
+    position: {
+      x: moon.position.x + k2x.x*dt/2,
+      y: moon.position.y + k2x.y*dt/2,
+    },
+    velocity: {
+      x: moon.velocity.x + k2v.x*dt/2,
+      y: moon.velocity.y + k2v.y*dt/2,
+    },
+  };
+  const k3v = computeAcceleration(temp2, others);
+  const k3x = temp2.velocity;
+
+  const temp3 = {
+    position: {
+      x: moon.position.x + k3x.x*dt,
+      y: moon.position.y + k3x.y*dt,
+    },
+    velocity: {
+      x: moon.velocity.x + k3v.x*dt,
+      y: moon.velocity.y + k3v.y*dt,
+    },
+  };
+  const k4v = computeAcceleration(temp3, others);
+  const k4x = temp3.velocity;
+
   const velocity = {
-    x: moon.velocity.x + acceleration.x*dt,
-    y: moon.velocity.y + acceleration.y*dt,
+    x: moon.velocity.x + dt/6*(k1v.x + 2*k2v.x + 2*k3v.x + k4v.x),
+    y: moon.velocity.y + dt/6*(k1v.y + 2*k2v.y + 2*k3v.y + k4v.y),
   };
+
   const position = {
-    x: moon.position.x + moon.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
-    y: moon.position.y + moon.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+    x: moon.position.x + dt/6*(k1x.x + 2*k2x.x + 2*k3x.x + k4x.x),
+    y: moon.position.y + dt/6*(k1x.y + 2*k2x.y + 2*k3x.y + k4x.y),
   };
+
   return { ...moon, position, velocity };
 };
 
 const calculateNextSatellite = ({ earth, moon, satellite }, dt) => {
-  const distanceToEarth = distance({ from: satellite.position, to: earth.position });
-  const accelerationTowardEarth = scaleVector(
-    G*earth.mass/distanceToEarth**2,
-    direction({ from: satellite.position, to: earth.position })
-  );
-  const distanceToMoon = distance({ from: satellite.position, to: moon.position });
-  const accelerationTowardMoon = scaleVector(
-    G*moon.mass/distanceToMoon**2,
-    direction({ from: satellite.position, to: moon.position })
-  );
-  const acceleration = {
-    x: accelerationTowardEarth.x + accelerationTowardMoon.x,
-    y: accelerationTowardEarth.y + accelerationTowardMoon.y,
+  const others = [earth, moon];
+
+  const k1v = computeAcceleration(satellite, others);
+  const k1x = satellite.velocity;
+
+  const temp1 = {
+    position: {
+      x: satellite.position.x + k1x.x*dt/2,
+      y: satellite.position.y + k1x.y*dt/2,
+    },
+    velocity: {
+      x: satellite.velocity.x + k1v.x*dt/2,
+      y: satellite.velocity.y + k1v.y*dt/2,
+    },
   };
+  const k2v = computeAcceleration(temp1, others);
+  const k2x = temp1.velocity;
+
+  const temp2 = {
+    position: {
+      x: satellite.position.x + k2x.x*dt/2,
+      y: satellite.position.y + k2x.y*dt/2,
+    },
+    velocity: {
+      x: satellite.velocity.x + k2v.x*dt/2,
+      y: satellite.velocity.y + k2v.y*dt/2,
+    },
+  };
+  const k3v = computeAcceleration(temp2, others);
+  const k3x = temp2.velocity;
+
+  const temp3 = {
+    position: {
+      x: satellite.position.x + k3x.x*dt,
+      y: satellite.position.y + k3x.y*dt,
+    },
+    velocity: {
+      x: satellite.velocity.x + k3v.x*dt,
+      y: satellite.velocity.y + k3v.y*dt,
+    },
+  };
+  const k4v = computeAcceleration(temp3, others);
+  const k4x = temp3.velocity;
+
   const velocity = {
-    x: satellite.velocity.x + acceleration.x*dt,
-    y: satellite.velocity.y + acceleration.y*dt,
+    x: satellite.velocity.x + dt/6*(k1v.x + 2*k2v.x + 2*k3v.x + k4v.x),
+    y: satellite.velocity.y + dt/6*(k1v.y + 2*k2v.y + 2*k3v.y + k4v.y),
   };
+
   const position = {
-    x: satellite.position.x + satellite.velocity.x*dt + (1/2)*acceleration.x*dt*dt,
-    y: satellite.position.y + satellite.velocity.y*dt + (1/2)*acceleration.y*dt*dt,
+    x: satellite.position.x + dt/6*(k1x.x + 2*k2x.x + 2*k3x.x + k4x.x),
+    y: satellite.position.y + dt/6*(k1x.y + 2*k2x.y + 2*k3x.y + k4x.y),
   };
+
   return { ...satellite, position, velocity };
+};
+
+const computeAcceleration = (body, others) => {
+  let x = 0, y = 0;
+  for (const other of others) {
+    const r = distance({ from: body.position, to: other.position });
+    const dir = direction({ from: body.position, to: other.position });
+    const a = G*other.mass/r**2;
+    x += a*dir.x;
+    y += a*dir.y;
+  }
+  return { x, y };
 };
 
 // rendering controlls on canvas
