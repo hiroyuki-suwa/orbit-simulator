@@ -576,15 +576,14 @@ const getters = {
 };
 
 const mutations = {
-  setRunning:     (status)          => { state.running = status; },
-  setPrecision:   (precision)       => { state.precision = precision; },
-  setTimerId:     (timerId)         => { state.timerId = timerId; },
-  resetTime:      ()                => { state.time = 0; },
-  incrementTime:  ()                => { state.time += getters.timeScale(); },
-  setZoomLevel:   (zoomLevel)       => { state.zoomLevel = zoomLevel; },
-  setSpeedLevel:  (speedLevel)      => { state.speedLevel = speedLevel; },
-  setCelestials:  (celestials)      => { state.celestials = celestials; },
-  setMass:        (name, mass)      => { state.celestials[name].mass = mass; },
+  setRunning:     (status)      => { state.running = status; },
+  setPrecision:   (precision)   => { state.precision = precision; },
+  setTimerId:     (timerId)     => { state.timerId = timerId; },
+  resetTime:      ()            => { state.time = 0; },
+  incrementTime:  ()            => { state.time += getters.timeScale(); },
+  setZoomLevel:   (zoomLevel)   => { state.zoomLevel = zoomLevel; },
+  setSpeedLevel:  (speedLevel)  => { state.speedLevel = speedLevel; },
+  setCelestials:  (celestials)  => { state.celestials = celestials; },
 };
 
 // actions
