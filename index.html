@@ -575,6 +575,7 @@ const state = {
     moon: [],
     satellite: [],
   },
+  trajectoryDuration: 1,
 };
 
 const getters = {
@@ -864,18 +865,17 @@ const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
   if (!trajectory.length) return;
 
   const n = parseInt(duration/sections);
-  const _trajectory = [ ...trajectory ];
-  _trajectory.reverse();
-  _trajectory.splice(duration);
+  trajectory.reverse();
+  trajectory.splice(duration);
 
-  Array(sections).keys().forEach((section) => {
-    const segment = _trajectory.slice(n * section, n * (section + 1) + 2);
+  Array.from(Array(sections).keys()).forEach((section) => {
+    const segment = trajectory.slice(n * section, n * (section + 1) + 2);
     const startPosition = segment.shift();
     if (!startPosition) return;
 
     const opacity = 1 - section/sections;
     ctx.strokeStyle = `rgb(${color.r} ${color.g} ${color.b} / ${100*opacity}%)`;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     const { x, y } = transformToRenderingCoordinate(startPosition, scale);
     ctx.moveTo(startPosition.x, startPosition.y);
     ctx.beginPath();
