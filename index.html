@@ -243,16 +243,16 @@ input {
 
 .celestials-info {
   position: fixed;
-  bottom: 6rem;
+  bottom: 5rem;
   left: 1rem;
   @media screen and (min-width: 480px) {
-    bottom: 4.5rem;
+    bottom: 4rem;
   }
 }
 .celestials-info .title {
   margin: .5em 0;
   padding: 0 .5rem;
-  font-size: small;
+  font-size: x-small;
   line-height: 1;
   @media screen and (min-width: 480px) {
     font-size: medium;
@@ -264,7 +264,7 @@ input {
 .celestials-info .info {
   width: 16em;
   padding-left: 1rem;
-  font-size: x-small;
+  font-size: xx-small;
   white-space: pre-line;
   @media screen and (min-width: 480px) {
     font-size: small;
@@ -370,6 +370,7 @@ input {
   <div class="position-bottom-right flex-vertical">
     <button type="button" onclick="zoomIn()" class="material-icons">zoom_in</button>
     <button type="button" onclick="zoomOut()" class="material-icons">zoom_out</button>
+    <button type="button" id="togglePerspective" onclick="togglePerspective()" class="material-icons">settings_backup_restore</button>
   </div>
 
   <div id="modalSettings" class="modal" hidden>
@@ -502,7 +503,8 @@ const ui = {
     settings: document.getElementById('modalSettings'),
   },
   buttons: { 
-    toggleRun: document.getElementById('toggleRun'),
+    toggleRun:          document.getElementById('toggleRun'),
+    togglePerspective:  document.getElementById('togglePerspective'),
   },
   fieldsets: {
     trajectoryDuration: document.getElementsByName('trajectoryDuration')[0],
@@ -545,6 +547,7 @@ const ui = {
 
 const state = {
   running: false,
+  fixedPerspective: true,
   timerId: null,
   accuracy: null,
   time: 0,
@@ -579,16 +582,17 @@ const state = {
 };
 
 const getters = {
-  isRunning:      () => state.running,
-  timerId:        () => state.timerId,
-  time:           () => state.time,
-  speedLevel:     () => state.speedLevel,
-  timeScale:      () => phiTo(state.speedLevel),
-  accuracy:       () => state.accuracy,
-  zoomLevel:      () => state.zoomLevel,
-  renderingScale: () => .25*Math.min(ui.canvas.width, ui.canvas.height)*phiTo(state.zoomLevel),
-  celestials:     () => state.celestials,
-  trajectories:   () => ({
+  isRunning:        () => state.running,
+  fixedPerspective: () => state.fixedPerspective,
+  timerId:          () => state.timerId,
+  time:             () => state.time,
+  speedLevel:       () => state.speedLevel,
+  timeScale:        () => phiTo(state.speedLevel),
+  accuracy:         () => state.accuracy,
+  zoomLevel:        () => state.zoomLevel,
+  renderingScale:   () => phiTo(-2.5)*Math.min(ui.canvas.width, ui.canvas.height)*phiTo(state.zoomLevel),
+  celestials:       () => state.celestials,
+  trajectories:     () => ({
     earth:      [ ...state.trajectories.earth ],
     moon:       [ ...state.trajectories.moon ],
     satellite:  [ ...state.trajectories.satellite ],
@@ -597,14 +601,15 @@ const getters = {
 };
 
 const mutations = {
-  setRunning:     (status)      => { state.running = status; },
-  setAccuracy:    (accuracy)    => { state.accuracy = accuracy; },
-  setTimerId:     (timerId)     => { state.timerId = timerId; },
-  resetTime:      ()            => { state.time = 0; },
-  incrementTime:  ()            => { state.time += getters.timeScale(); },
-  setZoomLevel:   (zoomLevel)   => { state.zoomLevel = zoomLevel; },
-  setSpeedLevel:  (speedLevel)  => { state.speedLevel = speedLevel; },
-  setCelestials:  (celestials)  => { state.celestials = celestials; },
+  setRunning:         (status)      => { state.running = status; },
+  togglePerspective:  ()            => { state.fixedPerspective = !state.fixedPerspective; },
+  setAccuracy:        (accuracy)    => { state.accuracy = accuracy; },
+  setTimerId:         (timerId)     => { state.timerId = timerId; },
+  resetTime:          ()            => { state.time = 0; },
+  incrementTime:      ()            => { state.time += getters.timeScale(); },
+  setZoomLevel:       (zoomLevel)   => { state.zoomLevel = zoomLevel; },
+  setSpeedLevel:      (speedLevel)  => { state.speedLevel = speedLevel; },
+  setCelestials:      (celestials)  => { state.celestials = celestials; },
   updateTrajectories: () => {
     state.trajectories.earth.push(state.celestials.earth.position);
     state.trajectories.moon.push(state.celestials.moon.position);
@@ -710,6 +715,12 @@ const setStateParamsValue = (params) => {
       radius: 0,
     },
   });
+};
+
+const togglePerspective = () => {
+  mutations.togglePerspective();
+  renderResults();
+  updateUIControlls();
 };
 
 // simulation controlls
@@ -832,36 +843,46 @@ const clearCanvas = () => {
 };
 
 const renderScene = (celestials, trajectories, scale, duration) => {
-  drawIndices(scale);
-  drawTrajectory(trajectories.earth, colors.earth, scale, duration);
-  drawTrajectory(trajectories.moon, colors.moon, scale, duration);
-  drawTrajectory(trajectories.satellite, colors.satellite, scale, duration);
+  drawIndices();
+  drawTrajectory(trajectories.earth, colors.earth, duration);
+  drawTrajectory(trajectories.moon, colors.moon, duration);
+  drawTrajectory(trajectories.satellite, colors.satellite, duration);
   drawCelestial(celestials.earth, colors.earth, scale);
   drawCelestial(celestials.moon, colors.moon, scale);
   drawCelestial(celestials.satellite, colors.satellite, scale);
 };
 
-const drawIndices = (scale) => {
-  const { x, y } = transformToRenderingCoordinate({ x: 0, y: 0 }, scale);
-  const a = 1*scale
-  const offset = .25*a;
+const drawIndices = () => {
+  const width = 1;
   const color = colors.indices;
+
   ctx.strokeStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = width;
+
+  const p = phiTo(-1.5);
+  const q = phiTo(.5);
+  const p1 = { x: 0, y: -p };
+  const q1 = { x: 0, y: -q };
+  const p2 = { x: p, y: 0 };
+  const q2 = { x: q, y: 0 };
+  const p3 = { x: 0, y: p };
+  const q3 = { x: 0, y: q };
+  const p4 = { x: -p, y: 0 };
+  const q4 = { x: -q, y: 0 };
   [
-    [x, y - offset, x, y - a - offset], // 12 o'clock
-    [x + offset, y, x + a + offset, y], //  3 o'clock
-    [x, y + offset, x, y + a + offset], //  6 o'clock
-    [x - offset, y, x - a - offset, y], //  9 o'clock
-  ].forEach(([x1, y1, x2, y2]) => {
+    { p: transformToRenderingCoordinate(p1), q: transformToRenderingCoordinate(q1) }, // 12 o'clock
+    { p: transformToRenderingCoordinate(p2), q: transformToRenderingCoordinate(q2) }, //  3 o'clock
+    { p: transformToRenderingCoordinate(p3), q: transformToRenderingCoordinate(q3) }, //  6 o'clock
+    { p: transformToRenderingCoordinate(p4), q: transformToRenderingCoordinate(q4) }  //  9 o'clock
+  ].forEach(({p,q}) => {
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(q.x, q.y);
     ctx.stroke();
   });
 };
 
-const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
+const drawTrajectory = (trajectory, color, duration, sections = 16) => {
   if (!trajectory.length) return;
 
   const n = parseInt(duration/sections);
@@ -876,12 +897,12 @@ const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
     const opacity = 1 - section/sections;
     ctx.strokeStyle = `rgb(${color.r} ${color.g} ${color.b} / ${100*opacity}%)`;
     ctx.lineWidth = 2;
-    const { x, y } = transformToRenderingCoordinate(startPosition, scale);
+    const { x, y } = transformToRenderingCoordinate(startPosition);
     ctx.moveTo(startPosition.x, startPosition.y);
     ctx.beginPath();
 
     segment.forEach((position) => {
-      const { x, y } = transformToRenderingCoordinate(position, scale);
+      const { x, y } = transformToRenderingCoordinate(position);
       ctx.lineTo(x, y);
     });
 
@@ -890,7 +911,7 @@ const drawTrajectory = (trajectory, color, scale, duration, sections = 16) => {
 };
 
 const drawCelestial = ({ position, radius }, color, scale) => {
-  const { x, y } = transformToRenderingCoordinate(position, scale);
+  const { x, y } = transformToRenderingCoordinate(position);
   const r = Math.max(6, radius * scale);
   ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
   ctx.beginPath();
@@ -945,9 +966,12 @@ const hide = (target) => { target.setAttribute('hidden', true); };
 const updateUIControlls = () => {
   updateFieldsets();
   updateRunningButton();
+  updatePerspectiveButton();
 };
 
 const updateRunningButton = () => { ui.buttons.toggleRun.textContent = getters.isRunning() ? 'pause' : 'play_arrow'; };
+
+const updatePerspectiveButton = () => { ui.buttons.togglePerspective.textContent = getters.fixedPerspective() ? 'settings_backup_restore' : 'lock_reset'; };
 
 const updateFieldsets = () => {
   const { earth, moon, satellite } = getters.celestials();
@@ -993,10 +1017,28 @@ const scaleVector = (k, vector) => ({
   y: k*vector.y,
 });
 
-const transformToRenderingCoordinate = ({ x, y }, scale) => ({
-  x: scale*x + canvasCenter().x,
-  y: scale*y + canvasCenter().y,
-});
+const transformToRenderingCoordinate = ({ x, y }) => {
+  let X, Y;
+
+  if (getters.fixedPerspective()) {
+    X = x;
+    Y = y;
+  } else {
+    const { earth, moon } = getters.celestials();
+    const pos = difference({ between: { x, y }, and: earth.position });
+    const dir = direction({ from: earth.position, to: moon.position });
+    const cos = dir.y;
+    const sin = dir.x;
+    X = pos.x * cos - pos.y * sin;
+    Y = pos.x * sin + pos.y * cos;
+  }
+
+  const scale = getters.renderingScale();
+  return {
+    x: scale*X + canvasCenter().x,
+    y: scale*Y + canvasCenter().y,
+  };
+};
 
 const canvasCenter = () => ({
   x: ui.canvas.width/2,
