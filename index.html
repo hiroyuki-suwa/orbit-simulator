@@ -385,6 +385,7 @@ input {
 
       <form id="formSetting" class="inner">
         <input type="hidden" name="query" value="true" />
+        <input type="hidden" name="fixed" value="true" />
 
         <div>
           <label><span>duration of trajectories</span><input name="trajectoryDuration" type="number" min="0" max="1000000" step="100" value="10000" /></label>
@@ -507,6 +508,7 @@ const ui = {
     togglePerspective:  document.getElementById('togglePerspective'),
   },
   fieldsets: {
+    fixed:              document.getElementsByName('fixed')[0],
     trajectoryDuration: document.getElementsByName('trajectoryDuration')[0],
     accuracy:           document.getElementsByName('accuracy')[0],
     earth: {
@@ -602,6 +604,7 @@ const getters = {
 
 const mutations = {
   setRunning:         (status)      => { state.running = status; },
+  setPerspective:     (fixed)       => { state.fixedPerspective = fixed; },
   togglePerspective:  ()            => { state.fixedPerspective = !state.fixedPerspective; },
   setAccuracy:        (accuracy)    => { state.accuracy = accuracy; },
   setTimerId:         (timerId)     => { state.timerId = timerId; },
@@ -673,6 +676,7 @@ const setStateDefaultValue = () => {
 const setStateParamsValue = (params) => {
   mutations.resetTime();
   mutations.clearTrajectories();
+  mutations.setPerspective(params.get('fixed') == 'false' ? false : true);
   mutations.setTrajectoryDuration(Number(params.get('trajectoryDuration') || 2000));
   mutations.setAccuracy(Number(params.get('accuracy') || 240));
   mutations.setZoomLevel(0);
@@ -953,7 +957,10 @@ const displayInfo = ({ earth, moon, satellite }, time) => {
 };
 
 // modal controlls
-const openModalSettings = () => { reveal(ui.modals.settings); };
+const openModalSettings = () => {
+  stopSimulation();
+  reveal(ui.modals.settings);
+};
 const closeModalSettings = () => {
   reset();
   hide(ui.modals.settings);
@@ -971,7 +978,11 @@ const updateUIControlls = () => {
 
 const updateRunningButton = () => { ui.buttons.toggleRun.textContent = getters.isRunning() ? 'pause' : 'play_arrow'; };
 
-const updatePerspectiveButton = () => { ui.buttons.togglePerspective.textContent = getters.fixedPerspective() ? 'settings_backup_restore' : 'lock_reset'; };
+const updatePerspectiveButton = () => {
+  const fixed = getters.fixedPerspective();
+  ui.buttons.togglePerspective.textContent = fixed ? 'settings_backup_restore' : 'lock_reset';
+  ui.fieldsets.fixed.value = fixed ? 'true' : 'false';
+};
 
 const updateFieldsets = () => {
   const { earth, moon, satellite } = getters.celestials();
