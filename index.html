@@ -388,31 +388,31 @@ input {
         <input type="hidden" name="fixed" value="true" />
 
         <div>
-          <label><span>duration of trajectories</span><input name="trajectoryDuration" type="number" min="0" max="1000000" step="100" value="10000" /></label>
+          <label><span>duration of trajectories</span><input name="trajectoryDuration" type="number" inputmode="numeric" min="0" max="1000000" step="100" value="10000" /></label>
         </div>
 
         <div>
-          <label><span>accuracy of simulation</span><input name="accuracy" type="number" min="30" max="3000" step="30" value="120" /></label>
+          <label><span>accuracy of simulation</span><input name="accuracy" type="number" inputmode="numeric" min="30" max="3000" step="30" value="120" /></label>
         </div>
 
         <fieldset class="fieldset earth">
           <span class="fieldset-title">the Earth</span>
           <div class="field-row mass">
-            <label><span>mass</span><input name="earth[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+            <label><span>mass</span><input name="earth[mass]" type="number" inputmode="decimal" min="0" max="200" step="0.0001" value="0" /></label>
           </div>
           <div>
             <div class="field-row">
               <span class="field-name">position</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="earth[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="earth[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="earth[position][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="earth[position][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
             <div class="field-row">
               <span class="field-name">velocity</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="earth[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="earth[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="earth[velocity][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="earth[velocity][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
           </div>
@@ -421,21 +421,21 @@ input {
         <fieldset class="fieldset moon">
           <span class="fieldset-title">the Moon</span>
           <div class="field-row mass">
-            <label><span>mass</span><input name="moon[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+            <label><span>mass</span><input name="moon[mass]" type="number" inputmode="decimal" min="0" max="200" step="0.0001" value="0" /></label>
           </div>
           <div>
             <div class="field-row">
               <span class="field-name">position</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="moon[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="moon[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="moon[position][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="moon[position][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
             <div class="field-row">
               <span class="field-name">velocity</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="moon[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="moon[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="moon[velocity][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="moon[velocity][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
           </div>
@@ -444,21 +444,21 @@ input {
         <fieldset class="fieldset satellite">
           <span class="fieldset-title">the Satellite</span>
           <div class="field-row mass">
-            <label><span>mass</span><input name="satellite[mass]" type="number" min="0" max="200" step="0.0001" value="0" /></label>
+            <label><span>mass</span><input name="satellite[mass]" type="number" inputmode="decimal" min="0" max="200" step="0.0001" value="0" /></label>
           </div>
           <div>
             <div class="field-row">
               <span class="field-name">position</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="satellite[position][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="satellite[position][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="satellite[position][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="satellite[position][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
             <div class="field-row">
               <span class="field-name">velocity</span>
               <div class="coordinate-input">
-                <label><span>X</span><input name="satellite[velocity][x]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
-                <label><span>Y</span><input name="satellite[velocity][y]" type="number" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>X</span><input name="satellite[velocity][x]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
+                <label><span>Y</span><input name="satellite[velocity][y]" type="number" inputmode="decimal" min="-100" max="100" step="0.0001" value="0" /></label>
               </div>
             </div>
           </div>
